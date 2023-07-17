@@ -1,7 +1,8 @@
 import discord
+import iron_token
 
-TOKEN = 'OTIyNDU2ODExMTM3ODAyMjQw.GaFKer.9wqOXmBKO96WH3CrSQ8Hdjx9CkcIcF8_YmAEQg'
-CHANNEL_ID = 1130318451249008784
+TOKEN = iron_token.TOKEN
+CHANNEL_ID = iron_token.CHANNEL_ID
 
 class Client(discord.Client):
     async def on_ready(self):
