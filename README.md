@@ -1,1 +1,2 @@
-# discord_bot
+# Discord Bot
+Discord Bot for playing youtube
