@@ -17,13 +17,16 @@ class Client(discord.Client):
 
         if (message.channel.id != CHANNEL_ID):
             return;
-
-        await self.channel.send(message.content)
+        
+        #await self.channel.send(message.content)
 
         ch = self.get_channel(message.author.voice.channel.id)
         vc = await ch.connect()
+        
+        res = youtube.search(message.content)
+        link = res[0]['href']
 
-        song = youtube.download(iron_token.LINK)
+        song = youtube.download(link)
         vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
 
         while vc.is_playing():
