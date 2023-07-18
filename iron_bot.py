@@ -6,7 +6,7 @@ import youtube
 TOKEN = iron_token.TOKEN
 
 def verify_channel(channel_id):
-    filename = "channel.lists"
+    filename = "channels.list"
     channel_list_file = open(filename, 'r')
     channel_list = channel_list_file.readlines()
 
