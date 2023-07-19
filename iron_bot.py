@@ -42,14 +42,31 @@ class Client(discord.Client):
         song = youtube.download(link)
 
         async def pause_callback(interaction):
+            async def resume_callback(interaction):
+                if (vc.is_paused()):
+                    vc.resume()
+                await interaction.response.send_message("Resume")
+
+            if (vc.is_playing()):
+                vc.pause()
+
+            resume_btn = Button(label = "Resume", style = ButtonStyle.primary)
+            resume_btn.callback = resume_callback
+            view = View()
+            view.add_item(resume_btn)
+            await interaction.response.send_message(view = view)
+
+        async def stop_callback(interaction):
             if (vc.is_playing()):
                 vc.stop()
-            msg.append(await interaction.response.send_message("Pause music"))
 
         pause_btn = Button(label = "Pause", style = ButtonStyle.primary)
         pause_btn.callback = pause_callback
+        stop_btn = Button(label = "Stop", style = ButtonStyle.primary)
+        stop_btn.callback = stop_callback
         view = View()
         view.add_item(pause_btn)
+        view.add_item(stop_btn)
         msg.append(await channel.send("Play Music...", view = view))
 
         # connect
@@ -58,7 +75,7 @@ class Client(discord.Client):
 
         vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
 
-        while vc.is_playing():
+        while vc.is_playing() or vc.is_paused():
             await asyncio.sleep(0.1)
         
         await vc.disconnect()
