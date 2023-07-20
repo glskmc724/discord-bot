@@ -37,8 +37,9 @@ class Client(discord.Client):
         msg = [message]
 
         # find music
-        res = youtube.search(message.content)
-        link = res[0]['href']
+        res = youtube.search_api(message.content)
+        vidid = res["items"][0]["id"]["videoId"]
+        link = "https://www.youtube.com/embed/{}".format(vidid)
         song = youtube.download(link)
 
         async def pause_callback(interaction):

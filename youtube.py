@@ -6,6 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup as bs
 import yt_dlp
+import requests
+import json
+import iron_token
 
 default_num_search = 1
 opts = {
@@ -13,6 +16,7 @@ opts = {
         'format': 'bestaudio',
         'outtmpl': '%(title)s.mp3'
 }
+
 
 def search(keyword, num_search = default_num_search):
     caps = DesiredCapabilities.CHROME
@@ -66,6 +70,21 @@ def search(keyword, num_search = default_num_search):
             })
 
     return res;
+
+def search_api(keyword, num_search = default_num_search):
+    url = "https://www.googleapis.com/youtube/v3/search"
+    params = {
+        "part": "snippet",
+        "maxResults": default_num_search,
+        "q": keyword,
+        "type": "video",
+        "key": iron_token.YOUTUBE_API_KEY
+    }
+    resp = requests.get(url, params = params)
+    resp.encoding = "utf-8"
+    resp_data = resp.json()
+    return resp_data
+
 
 def download(link):
     dl = yt_dlp.YoutubeDL(opts)
