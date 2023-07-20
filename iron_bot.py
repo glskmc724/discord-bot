@@ -21,20 +21,67 @@ def verify_channel(channel_id):
     return False
 
 class Client(discord.Client):
+    async def pause_callback(self, interaction):
+        if (self.vc.is_playing()):
+            self.vc.pause()
+            await self.view_msg.edit(content = "Paused", view = await self.create_view())
+        await interaction.response.defer()
+
+    async def stop_callback(self, interaction):
+        if (self.vc.is_playing() or self.vc.is_paused()):
+            self.vc.stop()
+        await interaction.response.defer()
+
+    async def resume_callback(self, interaction):
+        if (self.vc.is_paused()):
+            self.vc.resume()
+            await self.view_msg.edit(content = "Playing", view = await self.create_view())
+        await interaction.response.defer()
+
+    async def create_view(self):
+        """ ⇄  ◁  II ▷ ↻ """
+        pause_btn = Button(label = "II", style = ButtonStyle.secondary)
+        pause_btn.callback = self.pause_callback
+        stop_btn = Button(label = "□", style = ButtonStyle.secondary)
+        stop_btn.callback = self.stop_callback
+        resume_btn = Button(label = "▷", style = ButtonStyle.secondary)
+        resume_btn.callback = self.resume_callback
+        view = View()
+        if (self.vc.is_paused()):
+            view.add_item(resume_btn)
+        else:
+            view.add_item(pause_btn)
+        view.add_item(stop_btn)
+
+        return view
+
+    async def create_content(self, youtube_content):
+        title = youtube_content["snippet"]["title"]
+        thumbnail = youtube_content["snippet"]["thumbnails"]["medium"]
+        content = "{}\r\n{}".format(title, thumbnail["url"])
+        return content
+
     async def on_ready(self):
         return;
 
     async def on_message(self, message):
         if (message.author == self.user):
-            return;
+            return
+
+        """
+        if (message.content == "!delete"):
+            message.channel.purge(limit = 1000)
+            return
+        """
 
         if (verify_channel(message.channel.id) != True):
-            return;
+            return
 
         channel = self.get_channel(message.channel.id)
         #await channel.send(message.content)
         
-        msg = [message]
+        self.user_msg = message
+        self.msgs = [self.user_msg]
 
         # find music
         res = youtube.search_api(message.content)
@@ -42,46 +89,22 @@ class Client(discord.Client):
         link = "https://www.youtube.com/embed/{}".format(vidid)
         song = youtube.download(link)
 
-        async def pause_callback(interaction):
-            async def resume_callback(interaction):
-                if (vc.is_paused()):
-                    vc.resume()
-                await interaction.response.send_message("Resume")
-
-            if (vc.is_playing()):
-                vc.pause()
-
-            resume_btn = Button(label = "Resume", style = ButtonStyle.primary)
-            resume_btn.callback = resume_callback
-            view = View()
-            view.add_item(resume_btn)
-            await interaction.response.send_message(view = view)
-
-        async def stop_callback(interaction):
-            if (vc.is_playing()):
-                vc.stop()
-
-        pause_btn = Button(label = "Pause", style = ButtonStyle.primary)
-        pause_btn.callback = pause_callback
-        stop_btn = Button(label = "Stop", style = ButtonStyle.primary)
-        stop_btn.callback = stop_callback
-        view = View()
-        view.add_item(pause_btn)
-        view.add_item(stop_btn)
-        msg.append(await channel.send("Play Music...", view = view))
-
         # connect
         ch = self.get_channel(message.author.voice.channel.id)
-        vc = await ch.connect()
+        self.vc = await ch.connect()
+        view = await self.create_view()
+        content = await self.create_content(res["items"][0])
+        self.view_msg = await channel.send(content = content, view = view)
+        self.msgs.append(self.view_msg)
 
-        vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
+        self.vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
 
-        while vc.is_playing() or vc.is_paused():
+        while self.vc.is_playing() or self.vc.is_paused():
             await asyncio.sleep(0.1)
         
-        await vc.disconnect()
-        for i in msg:
-            await i.delete()
+        await self.vc.disconnect()
+        for msg in self.msgs:
+            await msg.delete()
 
 intents = discord.Intents.default()
 intents.message_content = True
