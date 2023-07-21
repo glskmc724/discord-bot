@@ -21,8 +21,10 @@ def verify_channel(channel_id):
     return False
 
 class Client(discord.Client):
-    searched_list = {}
-    searching_list = {}
+    searched_list = dict()
+    searching_list = dict()
+    repeat_list = dict()
+    playing_list = dict()
     async def pause_callback(self, interaction):
         if (self.vc.is_playing()):
             self.vc.pause()
@@ -46,13 +48,15 @@ class Client(discord.Client):
 
     async def create_view(self):
         """ ⇄  ◁  II ▷ ↻ 🔍"""
-        pause_btn = Button(label = "II", style = ButtonStyle.secondary)
+        pause_btn = Button(label = "II Paused", style = ButtonStyle.secondary)
         pause_btn.callback = self.pause_callback
-        stop_btn = Button(label = "□", style = ButtonStyle.secondary)
+        stop_btn = Button(label = "□ Stop", style = ButtonStyle.secondary)
         stop_btn.callback = self.stop_callback
-        resume_btn = Button(label = "▷", style = ButtonStyle.secondary)
+        resume_btn = Button(label = "▷ Skip", style = ButtonStyle.secondary)
         resume_btn.callback = self.resume_callback
-        search_btn = Button(label = "🔍", style = ButtonStyle.secondary)
+        repeat_btn = Button(label = "↻ Repeat", style = ButtonStyle.secondary)
+        repeat_btn.callback = None
+        search_btn = Button(label = "🔍 Search", style = ButtonStyle.secondary)
         search_btn.callback = self.search_callback
         view = View()
         if (self.vc.is_paused()):
@@ -69,6 +73,23 @@ class Client(discord.Client):
         content = "{}\r\n{}".format(title, thumbnail["url"])
         return content
 
+    async def create_embed(self, youtube_content):
+        title = youtube_content["snippet"]["title"]
+        thumbnail = youtube_content["snippet"]["thumbnails"]["medium"]
+        embed = discord.Embed(title = title, description = "", color = discord.Color.random())
+        embed.set_image(url = thumbnail["url"])
+        return embed
+
+    async def create_search_result(self, results):
+        embed = discord.Embed(title = "Search Result", color = discord.Color.random())
+        idx = 1
+        for result in results["items"]:
+            title = result["snippet"]["title"]
+            output = "{}. {}".format(idx, title)
+            embed.add_field(name = output, value = "", inline = False)
+            idx += 1
+        return embed
+
     async def on_ready(self):
         filename = "channels.list"
         channel_list_file = open(filename, 'r')
@@ -80,6 +101,8 @@ class Client(discord.Client):
             else:
                 self.searched_list[int(channel)] = False
                 self.searching_list[int(channel)] = False
+                self.repeat_list[int(channel)] = False
+                self.playing_list[int(channel)] = list()
         return;
 
     async def on_message(self, message):
@@ -95,17 +118,15 @@ class Client(discord.Client):
         
         channel = self.get_channel(message.channel.id)
         #await channel.send(message.content)
-        
-        print(self.searched_list)
 
+        self.user_msg = message
+        self.msgs = [self.user_msg]
+        
         if (self.searched_list[message.channel.id] == True and self.searching_list[message.channel.id] == False):
-            idx = 1
             self.search_results = youtube.search_api(message.content, num_search = 5)
             self.searching_list[message.channel.id] = True
-            for result in self.search_results["items"]:
-                title = result["snippet"]["title"]
-                await channel.send(content = "{}. {}".format(idx, title))
-                idx += 1
+            embed = await self.create_search_result(self.search_results)
+            self.msgs.append(await channel.send(embed = embed))
             return
 
         if (self.searched_list[message.channel.id] == True and self.searching_list[message.channel.id] == True):
@@ -114,12 +135,13 @@ class Client(discord.Client):
                 await channel.send(content = content)
                 self.searched_list[message.channel.id] = False
                 self.searching_list[message.channel.id] = False
+                for msg in self.msgs:
+                    await msg.delete()
+                #message.content = content["snippet"]["title"]
+                return
             except ValueError:
-                await channel.send("Retry enter number")
-            return
-
-        self.user_msg = message
-        self.msgs = [self.user_msg]
+                self.msgs.append(await channel.send("Retry enter number"))
+                return
 
         # find music
         res = youtube.search_api(message.content)
@@ -132,14 +154,16 @@ class Client(discord.Client):
         self.vc = await ch.connect()
         view = await self.create_view()
         content = await self.create_content(res["items"][0])
-        self.view_msg = await channel.send(content = content, view = view)
+        embed = await self.create_embed(res["items"][0])
+        #self.view_msg = await channel.send(content = content, view = view)
+        self.view_msg = await channel.send(embed = embed, view = view)
         self.msgs.append(self.view_msg)
 
         self.vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
 
-        while self.vc.is_playing() or self.vc.is_paused():
+        while (self.vc.is_playing() or self.vc.is_paused()):
             await asyncio.sleep(0.1)
-        
+
         await self.vc.disconnect()
         for msg in self.msgs:
             await msg.delete()
