@@ -27,6 +27,7 @@ class Client(discord.Client):
     repeat_list = dict()
     message_list = dict()
     playing_list = dict()
+    holding_list = dict()
     async def pause_callback(self, interaction):
         if (self.vc.is_playing()):
             self.vc.pause()
@@ -106,6 +107,7 @@ class Client(discord.Client):
                 self.repeat_list[int(channel)] = False
                 self.playing_list[int(channel)] = list()
                 self.message_list[int(channel)] = list()
+                self.holding_list[int(channel)] = False
         return;
 
     async def on_message(self, message):
@@ -148,15 +150,7 @@ class Client(discord.Client):
 
         # find music
         res = youtube.search_api(message.content)
-
-        # connect
         self.playing_list[message.channel.id].append(res)
-        ch = self.get_channel(message.author.voice.channel.id)
-
-        try:
-            self.vc = await ch.connect()
-        except discord.errors.ClientException:
-            print("Test")
 
         # download music
         music = self.playing_list[message.channel.id][0]
@@ -164,7 +158,17 @@ class Client(discord.Client):
         link = "https://www.youtube.com/embed/{}".format(vidid)
         song = youtube.download(link)
 
-        # some music is playing, sleep
+        # connect
+        ch = self.get_channel(message.author.voice.channel.id)
+        try:
+            self.vc = await ch.connect()
+        except discord.errors.ClientException:
+            print("TEST")
+
+        if (self.vc.is_playing() or self.vc.is_paused()):
+            msgs.append(await channel.send(content = "Reserved: {}".format(music["items"][0]["snippet"]["title"])))
+
+        # holding
         while (self.vc.is_playing() or self.vc.is_paused()):
             await asyncio.sleep(0.1)
 
@@ -182,12 +186,13 @@ class Client(discord.Client):
         while (self.vc.is_playing() or self.vc.is_paused()):
             await asyncio.sleep(0.1)
 
+        if (len(self.playing_list[message.channel.id]) == 0):
+            await self.vc.disconnect()
+
         for msg in msgs:
             await msg.delete()
 
-        print(self.playing_list[message.channel.id])
-        if (len(self.playing_list[message.channel.id]) == 0):
-            await self.vc.disconnect()
+        self.holding_list[message.channel.id] = False
 
 intents = discord.Intents.default()
 intents.message_content = True
