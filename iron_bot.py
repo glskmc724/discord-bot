@@ -108,7 +108,7 @@ class Client(discord.Client):
                 self.playing_list[int(channel)] = list()
                 self.message_list[int(channel)] = list()
                 self.vc_list[int(channel)] = False
-        return;
+        return
 
     async def on_message(self, message):
         if (message.author == self.user):
@@ -152,12 +152,6 @@ class Client(discord.Client):
         res = youtube.search_api(message.content)
         self.playing_list[message.channel.id].append(res)
 
-        # download music
-        music = self.playing_list[message.channel.id][0]
-        vidid = res["items"][0]["id"]["videoId"]
-        link = "https://www.youtube.com/embed/{}".format(vidid)
-        song = youtube.download(link)
-
         # connect
         ch = self.get_channel(message.author.voice.channel.id)
         try:
@@ -172,15 +166,21 @@ class Client(discord.Client):
             msgs.append(await channel.send(content = "You chat too fast"))
             return
 
-        # holding
-        while (self.vc.is_playing() or self.vc.is_paused()):
-            await asyncio.sleep(0.1)
-
         while True:
-            if (music == res):
+            if (self.playing_list[message.channel.id][0] == res):
                 break
             else:
                 await asyncio.sleep(0.1)
+
+        # download music
+        music = self.playing_list[message.channel.id][0]
+        vidid = res["items"][0]["id"]["videoId"]
+        link = "https://www.youtube.com/embed/{}".format(vidid)
+        song = youtube.download(link)
+
+        # holding
+        while (self.vc.is_playing() or self.vc.is_paused()):
+            await asyncio.sleep(0.1)
 
         # print description
         view = await self.create_view()
