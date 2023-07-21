@@ -27,7 +27,7 @@ class Client(discord.Client):
     repeat_list = dict()
     message_list = dict()
     playing_list = dict()
-    holding_list = dict()
+    vc_list = dict()
     async def pause_callback(self, interaction):
         if (self.vc.is_playing()):
             self.vc.pause()
@@ -107,7 +107,7 @@ class Client(discord.Client):
                 self.repeat_list[int(channel)] = False
                 self.playing_list[int(channel)] = list()
                 self.message_list[int(channel)] = list()
-                self.holding_list[int(channel)] = False
+                self.vc_list[int(channel)] = False
         return;
 
     async def on_message(self, message):
@@ -163,14 +163,24 @@ class Client(discord.Client):
         try:
             self.vc = await ch.connect()
         except discord.errors.ClientException:
-            print("TEST")
+            pass
 
-        if (self.vc.is_playing() or self.vc.is_paused()):
-            msgs.append(await channel.send(content = "Reserved: {}".format(music["items"][0]["snippet"]["title"])))
+        try:
+            if (self.vc.is_playing() or self.vc.is_paused()):
+                msgs.append(await channel.send(content = "Reserved: {}".format(res["items"][0]["snippet"]["title"])))
+        except AttributeError:
+            msgs.append(await channel.send(content = "You chat too fast"))
+            return
 
         # holding
         while (self.vc.is_playing() or self.vc.is_paused()):
             await asyncio.sleep(0.1)
+
+        while True:
+            if (music == res):
+                break
+            else:
+                await asyncio.sleep(0.1)
 
         # print description
         view = await self.create_view()
@@ -191,8 +201,6 @@ class Client(discord.Client):
 
         for msg in msgs:
             await msg.delete()
-
-        self.holding_list[message.channel.id] = False
 
 intents = discord.Intents.default()
 intents.message_content = True
