@@ -16,7 +16,7 @@ def search_api(keyword, num_search = default_num_search):
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
         "part": "snippet",
-        "maxResults": default_num_search,
+        "maxResults": num_search,
         "q": keyword,
         "type": "video",
         "key": iron_token.YOUTUBE_API_KEY
