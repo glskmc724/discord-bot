@@ -20,10 +20,12 @@ def verify_channel(channel_id):
             return True
     return False
 
+
 class Client(discord.Client):
     searched_list = dict()
     searching_list = dict()
     repeat_list = dict()
+    message_list = dict()
     playing_list = dict()
     async def pause_callback(self, interaction):
         if (self.vc.is_playing()):
@@ -103,6 +105,7 @@ class Client(discord.Client):
                 self.searching_list[int(channel)] = False
                 self.repeat_list[int(channel)] = False
                 self.playing_list[int(channel)] = list()
+                self.message_list[int(channel)] = list()
         return;
 
     async def on_message(self, message):
@@ -120,13 +123,13 @@ class Client(discord.Client):
         #await channel.send(message.content)
 
         self.user_msg = message
-        self.msgs = [self.user_msg]
+        msgs = [self.user_msg]
         
         if (self.searched_list[message.channel.id] == True and self.searching_list[message.channel.id] == False):
             self.search_results = youtube.search_api(message.content, num_search = 5)
             self.searching_list[message.channel.id] = True
             embed = await self.create_search_result(self.search_results)
-            self.msgs.append(await channel.send(embed = embed))
+            msgs.append(await channel.send(embed = embed))
             return
 
         if (self.searched_list[message.channel.id] == True and self.searching_list[message.channel.id] == True):
@@ -135,38 +138,56 @@ class Client(discord.Client):
                 await channel.send(content = content)
                 self.searched_list[message.channel.id] = False
                 self.searching_list[message.channel.id] = False
-                for msg in self.msgs:
+                for msg in msgs:
                     await msg.delete()
                 #message.content = content["snippet"]["title"]
                 return
             except ValueError:
-                self.msgs.append(await channel.send("Retry enter number"))
+                msgs.append(await channel.send("Retry enter number"))
                 return
 
         # find music
         res = youtube.search_api(message.content)
+
+        # connect
+        self.playing_list[message.channel.id].append(res)
+        ch = self.get_channel(message.author.voice.channel.id)
+
+        try:
+            self.vc = await ch.connect()
+        except discord.errors.ClientException:
+            print("Test")
+
+        # download music
+        music = self.playing_list[message.channel.id][0]
         vidid = res["items"][0]["id"]["videoId"]
         link = "https://www.youtube.com/embed/{}".format(vidid)
         song = youtube.download(link)
 
-        # connect
-        ch = self.get_channel(message.author.voice.channel.id)
-        self.vc = await ch.connect()
-        view = await self.create_view()
-        content = await self.create_content(res["items"][0])
-        embed = await self.create_embed(res["items"][0])
-        #self.view_msg = await channel.send(content = content, view = view)
-        self.view_msg = await channel.send(embed = embed, view = view)
-        self.msgs.append(self.view_msg)
-
-        self.vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
-
+        # some music is playing, sleep
         while (self.vc.is_playing() or self.vc.is_paused()):
             await asyncio.sleep(0.1)
 
-        await self.vc.disconnect()
-        for msg in self.msgs:
+        # print description
+        view = await self.create_view()
+        content = await self.create_content(music["items"][0])
+        embed = await self.create_embed(music["items"][0])
+        #self.view_msg = await channel.send(content = content, view = view)
+        self.view_msg = await channel.send(embed = embed, view = view)
+        msgs.append(self.view_msg)
+
+        # playing
+        self.playing_list[message.channel.id].remove(music)
+        self.vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
+        while (self.vc.is_playing() or self.vc.is_paused()):
+            await asyncio.sleep(0.1)
+
+        for msg in msgs:
             await msg.delete()
+
+        print(self.playing_list[message.channel.id])
+        if (len(self.playing_list[message.channel.id]) == 0):
+            await self.vc.disconnect()
 
 intents = discord.Intents.default()
 intents.message_content = True
