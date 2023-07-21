@@ -202,6 +202,8 @@ class Client(discord.Client):
         for msg in msgs:
             await msg.delete()
 
+        print("TEST")
+
 intents = discord.Intents.default()
 intents.message_content = True
 client = Client(intents=intents)
