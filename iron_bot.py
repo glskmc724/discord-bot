@@ -29,19 +29,19 @@ class Client(discord.Client):
     playing_list = dict()
     vc_list = dict()
     async def pause_callback(self, interaction):
-        if (self.vc.is_playing()):
-            self.vc.pause()
+        if (self.vc_list[interaction.channel_id].is_playing()):
+            self.vc_list[interaction.channel_id].pause()
             await self.view_msg.edit(content = "Paused", view = await self.create_view())
         await interaction.response.defer()
 
     async def stop_callback(self, interaction):
-        if (self.vc.is_playing() or self.vc.is_paused()):
-            self.vc.stop()
+        if (self.vc_list[interaction.channel_id].is_playing() or self.vc_list[interaction.channel_id].is_paused()):
+            self.vc_list[interaction.channel_id].stop()
         await interaction.response.defer()
 
     async def resume_callback(self, interaction):
-        if (self.vc.is_paused()):
-            self.vc.resume()
+        if (self.vc_list[interaction.channel_id].is_paused()):
+            self.vc_list[interaction.channel_id].resume()
             await self.view_msg.edit(content = "Playing", view = await self.create_view())
         await interaction.response.defer()
 
@@ -49,7 +49,7 @@ class Client(discord.Client):
         self.searched_list[interaction.channel_id] = True
         await interaction.response.send_message("Input music title for searching")
 
-    async def create_view(self):
+    async def create_view(self, channel_id):
         """ ⇄  ◁  II ▷ ↻ 🔍"""
         pause_btn = Button(label = "II Paused", style = ButtonStyle.secondary)
         pause_btn.callback = self.pause_callback
@@ -62,7 +62,7 @@ class Client(discord.Client):
         search_btn = Button(label = "🔍 Search", style = ButtonStyle.secondary)
         search_btn.callback = self.search_callback
         view = View()
-        if (self.vc.is_paused()):
+        if (self.vc_list[channel_id].is_paused()):
             view.add_item(resume_btn)
         else:
             view.add_item(pause_btn)
@@ -155,12 +155,12 @@ class Client(discord.Client):
         # connect
         ch = self.get_channel(message.author.voice.channel.id)
         try:
-            self.vc = await ch.connect()
+            self.vc_list[message.channel.id] = await ch.connect()
         except discord.errors.ClientException:
             pass
 
         try:
-            if (self.vc.is_playing() or self.vc.is_paused()):
+            if (self.vc_list[message.channel.id].is_playing() or self.vc_list[message.channel.id].is_paused()):
                 msgs.append(await channel.send(content = "Reserved: {}".format(res["items"][0]["snippet"]["title"])))
         except AttributeError:
             msgs.append(await channel.send(content = "You chat too fast"))
@@ -179,11 +179,11 @@ class Client(discord.Client):
         song = youtube.download(link)
 
         # holding
-        while (self.vc.is_playing() or self.vc.is_paused()):
+        while (self.vc_list[message.channel.id].is_playing() or self.vc_list[message.channel.id].is_paused()):
             await asyncio.sleep(0.1)
 
         # print description
-        view = await self.create_view()
+        view = await self.create_view(message.channel.id)
         content = await self.create_content(music["items"][0])
         embed = await self.create_embed(music["items"][0])
         #self.view_msg = await channel.send(content = content, view = view)
@@ -192,17 +192,15 @@ class Client(discord.Client):
 
         # playing
         self.playing_list[message.channel.id].remove(music)
-        self.vc.play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
-        while (self.vc.is_playing() or self.vc.is_paused()):
+        self.vc_list[message.channel.id].play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
+        while (self.vc_list[message.channel.id].is_playing() or self.vc_list[message.channel.id].is_paused()):
             await asyncio.sleep(0.1)
 
         if (len(self.playing_list[message.channel.id]) == 0):
-            await self.vc.disconnect()
+            await self.vc_list[message.channel.id].disconnect()
 
         for msg in msgs:
             await msg.delete()
-
-        print("TEST")
 
 intents = discord.Intents.default()
 intents.message_content = True
