@@ -157,6 +157,7 @@ class Client(discord.Client):
         try:
             self.vc = await ch.connect()
         except discord.errors.ClientException:
+            print("TEST")
             pass
 
         try:
