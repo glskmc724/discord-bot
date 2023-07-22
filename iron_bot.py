@@ -31,23 +31,39 @@ class Client(discord.Client):
     async def pause_callback(self, interaction):
         if (self.vc_list[interaction.channel_id].is_playing()):
             self.vc_list[interaction.channel_id].pause()
-            await self.view_msg.edit(content = "Paused", view = await self.create_view())
+            await self.view_msg.edit(view = await self.create_view(interaction.channel_id))
         await interaction.response.defer()
 
     async def stop_callback(self, interaction):
         if (self.vc_list[interaction.channel_id].is_playing() or self.vc_list[interaction.channel_id].is_paused()):
             self.vc_list[interaction.channel_id].stop()
+            if (self.repeat_list[interaction.channel_id] == True):
+                self.repeat_list[interaction.channel_id] = False
         await interaction.response.defer()
 
     async def resume_callback(self, interaction):
         if (self.vc_list[interaction.channel_id].is_paused()):
             self.vc_list[interaction.channel_id].resume()
-            await self.view_msg.edit(content = "Playing", view = await self.create_view())
+            await self.view_msg.edit(view = await self.create_view(interaction.channel_id))
+        await interaction.response.defer()
+
+    async def repeat_on_callback(self, interaction):
+        if (self.vc_list[interaction.channel_id].is_playing() or self.vc_list[interaction.channel_id].is_paused()):
+            self.repeat_list[interaction.channel_id] = True
+            await self.view_msg.edit(view = await self.create_view(interaction.channel_id))
+        await interaction.response.defer()
+
+    async def repeat_off_callback(self, interaction):
+        if (self.repeat_list[interaction.channel_id] == True):
+            self.repeat_list[interaction.channel_id] = False
         await interaction.response.defer()
 
     async def search_callback(self, interaction):
-        self.searched_list[interaction.channel_id] = True
-        await interaction.response.send_message("Input music title for searching\nThis message delete after 1 sec, but search do not ended.", delete_after = 1.0)
+        if (self.repeat_list[interaction.channel_id] == True):
+            await interaction.response.send_message("Turn off repeat function to play another music.", delete_after = 3.0)
+        else:
+            self.searched_list[interaction.channel_id] = True
+            await interaction.response.send_message("Input music title for searching\nThis message delete after 3 sec, but search do not ended.", delete_after = 3.0)
 
     async def create_view(self, channel_id):
         """ ⇄  ◁  II ▷ ↻ 🔍"""
@@ -57,8 +73,10 @@ class Client(discord.Client):
         stop_btn.callback = self.stop_callback
         resume_btn = Button(label = "▷ Skip", style = ButtonStyle.secondary)
         resume_btn.callback = self.resume_callback
-        repeat_btn = Button(label = "↻ Repeat", style = ButtonStyle.secondary)
-        repeat_btn.callback = None
+        repeat_on_btn = Button(label = "↻ Repeat On", style = ButtonStyle.secondary)
+        repeat_on_btn.callback = self.repeat_on_callback
+        repeat_off_btn = Button(label = "↻ Repeat Off", style = ButtonStyle.secondary)
+        repeat_off_btn.callback = self.repeat_off_callback
         search_btn = Button(label = "🔍 Search", style = ButtonStyle.secondary)
         search_btn.callback = self.search_callback
         view = View()
@@ -67,6 +85,10 @@ class Client(discord.Client):
         else:
             view.add_item(pause_btn)
         view.add_item(stop_btn)
+        if (self.repeat_list[channel_id] == True):
+            view.add_item(repeat_off_btn)
+        else:
+            view.add_item(repeat_on_btn)
         view.add_item(search_btn)
         return view
 
@@ -117,17 +139,20 @@ class Client(discord.Client):
         if (verify_channel(message.channel.id) != True):
             return
         
+        channel = self.get_channel(message.channel.id)
+
         if (message.content == "!delete"):
             await message.channel.purge(limit = 1000)
             return
         
+        if (self.repeat_list[message.channel.id] == True):
+            await channel.send(content = "Turn off repeat function to play another music.", delete_after = 3.0)
+            return
+
         if (message.content[:7] == "!search"):
             title = message.content[8:]
             search = True
             self.searched_list[message.channel.id] = True
-
-        channel = self.get_channel(message.channel.id)
-        #await channel.send(message.content)
 
         msgs = [message]
         
@@ -204,9 +229,12 @@ class Client(discord.Client):
 
         # playing
         self.playing_list[message.channel.id].remove(music)
-        self.vc_list[message.channel.id].play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
-        while (self.vc_list[message.channel.id].is_playing() or self.vc_list[message.channel.id].is_paused()):
-            await asyncio.sleep(0.1)
+        while True:
+            self.vc_list[message.channel.id].play(discord.FFmpegPCMAudio(executable = "ffmpeg", source = song))
+            while (self.vc_list[message.channel.id].is_playing() or self.vc_list[message.channel.id].is_paused()):
+                await asyncio.sleep(0.1)
+            if (self.repeat_list[message.channel.id] == False):
+                break
 
         if (len(self.playing_list[message.channel.id]) == 0):
             await self.vc_list[message.channel.id].disconnect()
