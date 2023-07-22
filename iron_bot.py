@@ -47,7 +47,7 @@ class Client(discord.Client):
 
     async def search_callback(self, interaction):
         self.searched_list[interaction.channel_id] = True
-        await interaction.response.send_message("Input music title for searching")
+        await interaction.response.send_message("Input music title for searching\nThis message delete after 1 sec, but search do not ended.", delete_after = 1.0)
 
     async def create_view(self, channel_id):
         """ ⇄  ◁  II ▷ ↻ 🔍"""
@@ -114,43 +114,55 @@ class Client(discord.Client):
         if (message.author == self.user):
             return
 
-        if (message.content == "!delete"):
-            await message.channel.purge(limit = 1000)
-            return
-
         if (verify_channel(message.channel.id) != True):
             return
         
+        if (message.content == "!delete"):
+            await message.channel.purge(limit = 1000)
+            return
+        
+        if (message.content[:7] == "!search"):
+            title = message.content[8:]
+            search = True
+            self.searched_list[message.channel.id] = True
+
         channel = self.get_channel(message.channel.id)
         #await channel.send(message.content)
 
-        self.user_msg = message
-        msgs = [self.user_msg]
+        msgs = [message]
         
         if (self.searched_list[message.channel.id] == True and self.searching_list[message.channel.id] == False):
-            self.search_results = youtube.search_api(message.content, num_search = 5)
+            if (search == True):
+                self.search_results = youtube.search_api(title, num_search = 5)
+            else:
+                self.search_results = youtube.search_api(message.content, num_search = 5)
             self.searching_list[message.channel.id] = True
             embed = await self.create_search_result(self.search_results)
-            msgs.append(await channel.send(embed = embed))
+            self.message_list[message.channel.id].append(message)
+            self.message_list[message.channel.id].append(await channel.send(embed = embed))
             return
 
         if (self.searched_list[message.channel.id] == True and self.searching_list[message.channel.id] == True):
             try:
-                content = await self.create_content(self.search_results["items"][int(message.content) - 1])
-                await channel.send(content = content)
+                #content = await self.create_content(self.search_results["items"][int(message.content) - 1])
                 self.searched_list[message.channel.id] = False
-                self.searching_list[message.channel.id] = False
-                for msg in msgs:
-                    await msg.delete()
-                #message.content = content["snippet"]["title"]
-                return
             except ValueError:
-                msgs.append(await channel.send("Retry enter number"))
+                self.message_list[message.channel.id].append(await channel.send("Retry enter number"))
                 return
 
         # find music
-        res = youtube.search_api(message.content)
-        self.playing_list[message.channel.id].append(res)
+        if (self.searching_list[message.channel.id] == False):
+            idx = 0
+            res = youtube.search_api(message.content)
+            self.playing_list[message.channel.id].append(res)
+        else:
+            idx = int(message.content) - 1
+            res = self.search_results
+            self.playing_list[message.channel.id].append(res)
+            self.searching_list[message.channel.id] = False
+            for msg in self.message_list[message.channel.id]:
+                await msg.delete()
+            self.message_list[message.channel.id] = list()
 
         # connect
         ch = self.get_channel(message.author.voice.channel.id)
@@ -161,7 +173,7 @@ class Client(discord.Client):
 
         try:
             if (self.vc_list[message.channel.id].is_playing() or self.vc_list[message.channel.id].is_paused()):
-                msgs.append(await channel.send(content = "Reserved: {}".format(res["items"][0]["snippet"]["title"])))
+                msgs.append(await channel.send(content = "Reserved: {}".format(res["items"][idx]["snippet"]["title"])))
         except AttributeError:
             msgs.append(await channel.send(content = "You chat too fast"))
             return
@@ -174,7 +186,7 @@ class Client(discord.Client):
 
         # download music
         music = self.playing_list[message.channel.id][0]
-        vidid = res["items"][0]["id"]["videoId"]
+        vidid = res["items"][idx]["id"]["videoId"]
         link = "https://www.youtube.com/embed/{}".format(vidid)
         song = youtube.download(link)
 
@@ -184,7 +196,7 @@ class Client(discord.Client):
 
         # print description
         view = await self.create_view(message.channel.id)
-        content = await self.create_content(music["items"][0])
+        #content = await self.create_content(music["items"][0])
         embed = await self.create_embed(music["items"][0])
         #self.view_msg = await channel.send(content = content, view = view)
         self.view_msg = await channel.send(embed = embed, view = view)
