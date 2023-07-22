@@ -56,6 +56,7 @@ class Client(discord.Client):
     async def repeat_off_callback(self, interaction):
         if (self.repeat_list[interaction.channel_id] == True):
             self.repeat_list[interaction.channel_id] = False
+            await self.view_msg.edit(view = await self.create_view(interaction.channel_id))
         await interaction.response.defer()
 
     async def search_callback(self, interaction):
@@ -71,7 +72,7 @@ class Client(discord.Client):
         pause_btn.callback = self.pause_callback
         stop_btn = Button(label = "□ Stop", style = ButtonStyle.secondary)
         stop_btn.callback = self.stop_callback
-        resume_btn = Button(label = "▷ Skip", style = ButtonStyle.secondary)
+        resume_btn = Button(label = "▷ Play", style = ButtonStyle.secondary)
         resume_btn.callback = self.resume_callback
         repeat_on_btn = Button(label = "↻ Repeat On", style = ButtonStyle.secondary)
         repeat_on_btn.callback = self.repeat_on_callback
@@ -79,7 +80,7 @@ class Client(discord.Client):
         repeat_off_btn.callback = self.repeat_off_callback
         search_btn = Button(label = "🔍 Search", style = ButtonStyle.secondary)
         search_btn.callback = self.search_callback
-        view = View()
+        view = View(timeout = None)
         if (self.vc_list[channel_id].is_paused()):
             view.add_item(resume_btn)
         else:
@@ -146,6 +147,7 @@ class Client(discord.Client):
             return
         
         if (self.repeat_list[message.channel.id] == True):
+            message.delete()
             await channel.send(content = "Turn off repeat function to play another music.", delete_after = 3.0)
             return
 
@@ -153,6 +155,8 @@ class Client(discord.Client):
             title = message.content[8:]
             search = True
             self.searched_list[message.channel.id] = True
+        else:
+            search = False
 
         msgs = [message]
         
