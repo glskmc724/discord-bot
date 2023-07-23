@@ -8,8 +8,10 @@ import music_play
 
 TOKEN = iron_token.TOKEN
 
-search_cmd = "!search"
-search_cmd_len = len(search_cmd)
+search_eng_cmd = "!search"
+search_eng_cmd_len = len(search_eng_cmd)
+search_kor_cmd = "!검색"
+search_kor_cmd_len = len(search_kor_cmd)
 loop = None
 
 delete_cmd = "!delete"
@@ -53,12 +55,18 @@ class Client(discord.Client):
                 self.music_message[int(channel)].queue_callback = self.music_play[int(channel)].queue_callback
                 await self.music_message[int(channel)].create_music_message()
 
-    def is_search_cmd(self, content):
-        if (content[:search_cmd_len] == "!search"):
-            return content[search_cmd_len + 1:]
+    def is_search_eng_cmd(self, content):
+        if (content[:search_eng_cmd_len] == "!search"):
+            return content[search_eng_cmd_len + 1:]
         else:
             return False
         
+    def is_search_kor_cmd(self, content):
+        if (content[:search_kor_cmd_len] == "!검색"):
+            return content[search_kor_cmd_len + 1:]
+        else:
+            return False
+
     def is_cmd(self, content, cmd):
         if (content[:len(cmd)] == cmd):
             return True
@@ -99,7 +107,7 @@ class Client(discord.Client):
             await message.channel.purge(limit = 1000)
             return
 
-        keyword = self.is_search_cmd(content)
+        keyword = self.is_search_eng_cmd(content) or self.is_search_kor_cmd(content)
         self.music_play[channel_id].channel = voice_channel
 
         if (keyword != False):
