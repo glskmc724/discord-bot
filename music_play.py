@@ -116,6 +116,7 @@ class Music_Play:
                 self.music_message.next_music = ""
                 future = asyncio.run_coroutine_threadsafe(self.music_message.update_music_message(), self.loop)
                 future.result()
+                self.voice_client = None
 
     async def queue_insert(self, music):
         if (len(self.queue) == 0):
