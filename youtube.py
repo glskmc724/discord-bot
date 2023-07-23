@@ -2,8 +2,14 @@
 
 import yt_dlp
 import requests
-import json
 import iron_token
+import json
+
+class Music:
+    title = ""
+    desc = ""
+    thumbnail = ""
+    video_id = 0
 
 default_num_search = 1
 opts = {
