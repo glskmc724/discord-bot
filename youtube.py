@@ -18,14 +18,14 @@ opts = {
     'outtmpl': '%(title)s.mp3'
 }
 
-def search_api(keyword, num_search = default_num_search):
+def search_api(keyword, num_search = default_num_search, youtube_api_key):
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
         "part": "snippet",
         "maxResults": num_search,
         "q": keyword,
         "type": "video",
-        "key": iron_token.YOUTUBE_API_KEY
+        "key": youtube_api_key
     }
     resp = requests.get(url, params = params)
     resp.encoding = "utf-8"
