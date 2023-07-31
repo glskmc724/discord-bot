@@ -1,4 +1,4 @@
-# Discord Bot
+# Iron Bot
 Discord Bot for playing youtube
 
 # Requirements
