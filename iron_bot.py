@@ -1,12 +1,10 @@
 import discord
-import iron_token
+import iron_config
 import asyncio
 
 import music_message
 import music_search
 import music_play
-
-TOKEN = iron_token.TOKEN
 
 search_eng_cmd = "!search"
 search_eng_cmd_len = len(search_eng_cmd)
@@ -36,7 +34,7 @@ class Client(discord.Client):
             if (channel[0] == '#'):
                 continue
             else:
-                self.music_search[int(channel)] = music_search.Music_Search()
+                self.music_search[int(channel)] = music_search.Music_Search(config.youtube_api_key)
                 self.music_search[int(channel)].channel = self.get_channel(int(channel))
 
                 self.music_message[int(channel)] = music_message.Music_Message()
@@ -156,5 +154,6 @@ class Client(discord.Client):
 if (__name__ == "__main__"):
     intents = discord.Intents.default()
     intents.message_content = True
-    client = Client(intents=intents)
-    client.run(TOKEN)
+    config = iron_config.Config()
+    client = Client(intents = intents)
+    client.run(config.discord["discord_bot_token"])
