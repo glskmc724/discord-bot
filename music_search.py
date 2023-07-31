@@ -11,14 +11,14 @@ class Music_Search:
     search_close = False
     searching = False
     youtube_api_key = ""
-    def __init__(self, channel = None, keyword = None, num_result = 5, youtube_api_key):
+    def __init__(self, channel = None, keyword = None, num_result = 5, key = ""):
         self.channel = channel
         self.keyword = keyword
         self.num_result = num_result
-        self.youtube_api_key = youtube_api_key
-    
+        self.youtube_api_key = key
+
     def search(self):
-        res = youtube.search_api(self.keyword, num_search = self.num_result, youtube_api_key)
+        res = youtube.search_api(self.keyword, num_search = self.num_result, youtube_api_key = self.youtube_api_key)
         self.musics = list()
         for item in res["items"]:
             music = youtube.Music()

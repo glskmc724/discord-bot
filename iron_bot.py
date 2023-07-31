@@ -34,7 +34,7 @@ class Client(discord.Client):
             if (channel[0] == '#'):
                 continue
             else:
-                self.music_search[int(channel)] = music_search.Music_Search(config.youtube_api_key)
+                self.music_search[int(channel)] = music_search.Music_Search(int(channel), key = config.youtube["youtube_api_key"])
                 self.music_search[int(channel)].channel = self.get_channel(int(channel))
 
                 self.music_message[int(channel)] = music_message.Music_Message()
