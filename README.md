@@ -35,7 +35,7 @@ iron@iron:~$ sudo apt-get install ffmpeg
 
 For use Iron bot, we must get Discord bot token and Youtube API key.
 
-When we get the token and API key, insert `**bot.conf**` and save file.
+When we get the token and API key, insert `bot.conf` and save file.
 
 ```bash
 # Input your discord bot token from https://discord.com/developers/application
