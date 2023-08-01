@@ -49,6 +49,11 @@ Iron bot support multiple channel but for use this function, we need to insert c
 
 We can get channel id from Discord server like below image. For get the channel id, we need to set developer mode in Discord app.
 
+```bash
+# Input channel id
+Insert your channel id from Discord server. only number.
+```
+
 ![image](https://github.com/glskmc724/iron-bot/assets/90677740/8c3a033b-6be1-4d0e-8c79-b8fa123c520b)
 
 # Using
