@@ -8,7 +8,7 @@ We can use Iron bot for playing youtube video in discord voice channel, and can 
 
 # Installation
 
-Run `**git clone** https://github.com/glskmc724/iron-bot`
+Run `git clone https://github.com/glskmc724/iron-bot`
 
 ## Windows
 
@@ -45,21 +45,21 @@ discord_bot_token="Insert your bot's token"
 youtube_api_key="Insert your API key"
 ```
 
-Iron bot support multiple channel but for use this function, we need to insert channel id in `**channels.list**` file. (Also need setting, when we use only single channel.)
+Iron bot support multiple channel but for use this function, we need to insert channel id in `channels.list` file. (Also need setting, when we use only single channel.)
 
 We can get channel id from Discord server like below image. For get the channel id, we need to set developer mode in Discord app.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/eb08e640-8a4e-44f3-a3f9-f071492b37ec/Untitled.png)
+![image](https://github.com/glskmc724/iron-bot/assets/90677740/8c3a033b-6be1-4d0e-8c79-b8fa123c520b)
 
 # Using
 
 
-When installation completed, run `**python3** iron_bot.py` for start bot.
+When installation completed, run `python3 iron_bot.py` for start bot.
 
-If you want to using in background, run `**nohup** python3 iron_bot.py &`
+If you want to using in background, run `nohup python3 iron_bot.py &`
 
 ### Credits
 
 
-- kmc000724@gmail.com, Using [discor](http://discord.py)d.py and yt-dlp.
+- kmc000724@gmail.com, Using discord.py and yt-dlp.
 - @JHni2, Get youtube video from Youtube Data API v3.
