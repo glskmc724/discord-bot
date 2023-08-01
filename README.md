@@ -61,5 +61,5 @@ If you want to using in background, run `nohup python3 iron_bot.py &`
 ### Credits
 
 
-- kmc000724@gmail.com, Using discord.py and yt-dlp.
-- @JHni2, Get youtube video from Youtube Data API v3.
+- [kmc000724@gmail.com](https://github.com/glskmc724), Using discord.py and yt-dlp.
+- [@JHni2](https://github.com/JHni2), Get youtube video from Youtube Data API v3.
