@@ -22,8 +22,14 @@ class Music_Search:
             res = youtube.search_api(self.keyword, num_search = self.num_result, youtube_api_key = self.youtube_api_key)
         else:
             address, params = address.split("?")
-            params_list = params.split("&")
-            video_id = params_list[0][2:] # v=id
+            params = params.split("&")
+            #video_id = params_list[0][2:] # v=id
+            arg = "v="
+            arg_len = len(arg)
+            for param in params:
+                if (param[:arg_len] == "v="):
+                    video_id = param[arg_len:]
+                    break
             res = youtube.search_id(video_id, youtube_api_key = self.youtube_api_key)
         self.musics = list()
         for item in res["items"]:
