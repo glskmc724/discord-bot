@@ -65,6 +65,14 @@ class Client(discord.Client):
         else:
             return False
 
+    def is_http_address(self, content):
+        https = "https://"
+        https_len = len(https)
+        if (content[:https_len] == "https://"):
+            return True
+        else:
+            return False
+
     def is_cmd(self, content, cmd):
         if (content[:len(cmd)] == cmd):
             return True
@@ -108,6 +116,22 @@ class Client(discord.Client):
         keyword = self.is_search_eng_cmd(content) or self.is_search_kor_cmd(content)
         self.music_play[channel_id].channel = voice_channel
 
+        if (self.is_http_address(content) == True):
+            self.music_search[channel_id].search(address = content)
+            music = self.music_search[channel_id].musics[0]
+
+            await self.print_music_message(channel_id, music, message.author)
+            playing = self.music_play[channel_id].playing
+
+            if (playing != True):
+                self.music_play[channel_id].video_id = music.video_id
+                self.music_play[channel_id].download()
+                await self.music_play[channel_id].connect()
+                self.music_play[channel_id].play()
+
+            await message.delete()
+            return
+    
         if (keyword != False):
             if (self.music_search[channel_id].searching == True):
                 await message.delete()

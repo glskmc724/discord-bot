@@ -17,15 +17,24 @@ class Music_Search:
         self.num_result = num_result
         self.youtube_api_key = key
 
-    def search(self):
-        res = youtube.search_api(self.keyword, num_search = self.num_result, youtube_api_key = self.youtube_api_key)
+    def search(self, address = ""):
+        if (address == ""):
+            res = youtube.search_api(self.keyword, num_search = self.num_result, youtube_api_key = self.youtube_api_key)
+        else:
+            address, params = address.split("?")
+            params_list = params.split("&")
+            video_id = params_list[0][2:] # v=id
+            res = youtube.search_id(video_id, youtube_api_key = self.youtube_api_key)
         self.musics = list()
         for item in res["items"]:
             music = youtube.Music()
             music.title = item["snippet"]["title"]
             music.desc = item["snippet"]["description"]
             music.thumbnail = item["snippet"]["thumbnails"]["medium"]
-            music.video_id = item["id"]["videoId"]
+            if (address == ""):
+                music.video_id = item["id"]["videoId"]
+            else:
+                music.video_id = video_id
             self.musics.append(music)
     
     async def select_callback(self, interaction):
