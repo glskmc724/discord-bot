@@ -14,7 +14,7 @@ default_num_search = 1
 opts = {
     'extract-audio': True,
     'format': 'bestaudio',
-    'outtmpl': '%(title)s.mp3'
+    'outtmpl': 'musics/%(title)s.mp3'
 }
 
 def search_id(video_id, youtube_api_key):
