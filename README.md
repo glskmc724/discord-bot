@@ -72,6 +72,8 @@ We can get channel id from Discord server like below image. For get the channel 
 # Using
 
 
+## Ubuntu
+
 When installation completed, run `python3 iron_bot.py` for start bot.
 
 If you want to using in background, run `nohup python3 iron_bot.py &`
