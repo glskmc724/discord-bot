@@ -12,7 +12,19 @@ Run `git clone https://github.com/glskmc724/iron-bot`
 
 ## Windows
 
-Preparing…
+Iron bot tested on Windows 10 amd64 with Python 3.11.0.
+
+To use Iron bot, we need to install Python packages discord, yt-dlp, pynacl using pip
+
+Also, we must install ffmpeg from [here](https://www.ffmpeg.org/download.html) and add ffmpeg install PATH in PC→Advanced system setting →Environment Variable. Here example installed in D:\git\iron-bot\bin\ffmpeg.
+
+```bash
+C:\Users\iron>pip install discord
+C:\Users\iron>pip install yt-dlp
+C:\Users\iron>pip install pynacl
+```
+
+![Screenshot from 2023-08-08 10-54-43](https://github.com/kmc0724/iron-bot/assets/90677740/f8d76de9-739d-4f0f-9d1a-89e69089c972)
 
 ## Ubuntu
 
