@@ -7,13 +7,6 @@ import music_message
 import music_search
 import music_play
 
-search_eng_cmd = "!search"
-search_eng_cmd_len = len(search_eng_cmd)
-search_kor_cmd = "!검색"
-search_kor_cmd_len = len(search_kor_cmd)
-loop = None
-
-delete_cmd = "!delete"
 class Client(discord.Client):
     music_message = dict()
     music_search = dict()
