@@ -1,5 +1,6 @@
 import discord
 import iron_config
+import iron_cmd
 import asyncio
 
 import music_message
@@ -17,6 +18,7 @@ class Client(discord.Client):
     music_message = dict()
     music_search = dict()
     music_play = dict()
+    cmds = iron_cmd.Commands(pre = "!")
 
     def verify_channel(self, ch):
         channels_list = open("channels.list", "r").readlines()
@@ -52,18 +54,6 @@ class Client(discord.Client):
                 self.music_message[int(channel)].next_callback = self.music_play[int(channel)].next_callback
                 self.music_message[int(channel)].queue_callback = self.music_play[int(channel)].queue_callback
                 await self.music_message[int(channel)].create_music_message()
-
-    def is_search_eng_cmd(self, content):
-        if (content[:search_eng_cmd_len] == "!search"):
-            return content[search_eng_cmd_len + 1:]
-        else:
-            return False
-        
-    def is_search_kor_cmd(self, content):
-        if (content[:search_kor_cmd_len] == "!검색"):
-            return content[search_kor_cmd_len + 1:]
-        else:
-            return False
 
     def is_http_address(self, content):
         https = "https://"
@@ -109,11 +99,11 @@ class Client(discord.Client):
         voice_channel = self.get_channel(voice_channel_id)
         content = message.content
 
-        if (self.is_cmd(content, "!delete")):
+        if (self.cmds.delete(content) == True):
             await message.channel.purge(limit = 1000)
             return
 
-        keyword = self.is_search_eng_cmd(content) or self.is_search_kor_cmd(content)
+        keyword = self.cmds.search(content)
         self.music_play[channel_id].channel = voice_channel
 
         if (self.is_http_address(content) == True):
