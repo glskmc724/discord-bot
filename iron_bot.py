@@ -2,6 +2,8 @@ import discord
 import iron_config
 import iron_cmd
 import asyncio
+import logging
+import traceback
 
 import music_message
 import music_search
@@ -159,8 +161,18 @@ class Client(discord.Client):
       
 
 if (__name__ == "__main__"):
-    intents = discord.Intents.default()
-    intents.message_content = True
-    config = iron_config.Config()
-    client = Client(intents = intents)
-    client.run(config.discord["discord_bot_token"])
+    logger = logging.getLogger()
+    logger.setLevel(logging.ERROR)
+    formatter = logging.Formatter(u'%(asctime)s [%(levelname)8s] %(message)s')
+    file_handler = logging.FileHandler("iron_bot.log", encoding = "utf-8")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    try:
+        intents = discord.Intents.default()
+        intents.message_content = True
+        config = iron_config.Config()
+        client = Client(intents = intents)
+        client.run(config.discord["discord_bot_token"])
+    except:
+        logging.error(traceback.format_exc())
