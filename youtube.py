@@ -29,6 +29,18 @@ def search_id(video_id, youtube_api_key):
     resp_data = resp.json()
     return resp_data
 
+def search_list(list_id, youtube_api_key):
+    url = "https://www.googleapis.com/youtube/v3/playlistItems"
+    params = {
+        "part": "snippet",
+        "playlistId": list_id,
+        "key": youtube_api_key
+    }
+    resp = requests.get(url, params = params)
+    resp.encoding = "utf-8"
+    resp_data = resp.json()
+    return resp_data
+
 def search_api(keyword = "", num_search = default_num_search, youtube_api_key = ""):
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
