@@ -23,8 +23,11 @@ class Commands:
             return False
 
     def search(self, content):
-        command, keyword = content.split(" ", 1)
-        if (self.cmd(command) == True):
-            return keyword
-        else:
+        try:
+            command, keyword = content.split(" ", 1)
+            if (self.cmd(command) == True):
+                return keyword
+            else:
+                return False
+        except:
             return False

@@ -34,7 +34,8 @@ def search_list(list_id, youtube_api_key):
     params = {
         "part": "snippet",
         "playlistId": list_id,
-        "key": youtube_api_key
+        "key": youtube_api_key,
+        "maxResults":30
     }
     resp = requests.get(url, params = params)
     resp.encoding = "utf-8"

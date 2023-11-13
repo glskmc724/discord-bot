@@ -24,13 +24,19 @@ class Music_Search:
             address, params = address.split("?")
             params = params.split("&")
             #video_id = params_list[0][2:] # v=id
-            arg = "v="
-            arg_len = len(arg)
+            video_arg = "v="
+            video_arg_len = len(video_arg)
+            list_arg = "list="
+            list_arg_len = len(list_arg)
             for param in params:
-                if (param[:arg_len] == "v="):
-                    video_id = param[arg_len:]
-                    break
-            res = youtube.search_id(video_id, youtube_api_key = self.youtube_api_key)
+                if (param[:video_arg_len] == "v="):
+                    video_id = param[video_arg_len:]
+                    arg_type = "video"
+                    res = youtube.search_id(video_id, youtube_api_key = self.youtube_api_key)
+                elif (param[:list_arg_len] == "list="):
+                    list_id = param[list_arg_len:]
+                    arg_type = "list"
+                    res = youtube.search_list(list_id, youtube_api_key = self.youtube_api_key)
         self.musics = list()
         for item in res["items"]:
             music = youtube.Music()
@@ -40,7 +46,10 @@ class Music_Search:
             if (address == ""):
                 music.video_id = item["id"]["videoId"]
             else:
-                music.video_id = video_id
+                if (arg_type == "list"):
+                    music.video_id = item["snippet"]["resourceId"]["videoId"]
+                else:
+                    music.video_id = video_id
             self.musics.append(music)
     
     async def select_callback(self, interaction):

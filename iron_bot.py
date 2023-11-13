@@ -103,16 +103,18 @@ class Client(discord.Client):
 
         if (self.is_http_address(content) == True):
             self.music_search[channel_id].search(address = content)
-            music = self.music_search[channel_id].musics[0]
+            musics = self.music_search[channel_id].musics
+            #music = musics[0]
 
-            await self.print_music_message(channel_id, music, message.author)
-            playing = self.music_play[channel_id].playing
+            for music in musics:
+                await self.print_music_message(channel_id, music, message.author)
+                playing = self.music_play[channel_id].playing
 
-            if (playing != True):
-                self.music_play[channel_id].video_id = music.video_id
-                self.music_play[channel_id].download()
-                await self.music_play[channel_id].connect()
-                self.music_play[channel_id].play()
+                if (playing != True):
+                    self.music_play[channel_id].video_id = music.video_id
+                    self.music_play[channel_id].download()
+                    await self.music_play[channel_id].connect()
+                    self.music_play[channel_id].play()
 
             await message.delete()
             return
